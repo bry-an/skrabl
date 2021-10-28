@@ -1,18 +1,30 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
-  </div>
+    <div class="table">
+        <SkrablGrid />
+        <SkrablDeck />
+        <button @click="submitTurn">Submit</button>
+    </div>
 </template>
 
 <script>
-// @ is an alias to /src
-import HelloWorld from '@/components/HelloWorld.vue';
+import SkrablDeck from '../components/SkrablDeck.vue';
+import SkrablGrid from '../components/SkrablGrid.vue';
+import { submitTurn } from '../refs/gameState.js';
 
 export default {
-  name: 'Home',
+  setup() {
+    return { submitTurn };
+  },
   components: {
-    HelloWorld,
+    SkrablDeck,
+    SkrablGrid,
   },
 };
 </script>
+<style lang="scss" scoped>
+.table {
+    margin: auto;
+    width: 60%;
+}
+
+</style>
