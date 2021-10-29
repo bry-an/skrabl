@@ -64,3 +64,6 @@ export const letterValueMap = {
   z: 10,
   ' ': '', // blank
 };
+
+export const ROW = 'row';
+export const COL = 'col';

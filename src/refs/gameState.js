@@ -1,7 +1,9 @@
 import { ref } from 'vue';
-import { shuffle, mapGrid } from '../util';
 import {
-  generateLetters, generateGrid, confirmMapper, validateTurn,
+  shuffle, mapGrid, generateGrid, getGridItem, confirmMapper,
+} from '../util';
+import {
+  generateLetters, validateTurn,
 } from '../game';
 
 export const skrablSack = ref(generateLetters());
@@ -28,8 +30,7 @@ export const addTileToDeck = (tile) => {
 };
 
 export const assignTile = (gridKey) => {
-  const [row, col] = gridKey.split(',');
-  const clickedGridSpace = grid.value[row][col];
+  const clickedGridSpace = getGridItem(gridKey, grid.value);
   if (clickedGridSpace.placedTile && clickedGridSpace.confirmed === true) {
     // a confirmed tile is here
     return;
@@ -74,8 +75,8 @@ export const initializeDeck = () => {
 };
 
 export const submitTurn = () => {
+  console.log('validate turn', validateTurn(grid.value));
   tileDeck.value = draw(tileDeck.value);
   grid.value = mapGrid(confirmMapper, grid.value);
   clickedTile.value = {};
-  console.log('validate turn', validateTurn(grid.value));
 };
