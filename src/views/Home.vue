@@ -2,29 +2,49 @@
     <div class="table">
         <SkrablGrid />
         <SkrablDeck />
-        <button @click="submitTurn">Submit</button>
+        <button
+            :class="[isValidTurn
+                ? 'blue-button'
+                : 'red-button',
+                'btn']"
+            :disabled="!isValidTurn"
+            @click="submitTurn">
+            Submit
+        </button>
     </div>
 </template>
 
 <script>
 import SkrablDeck from '../components/SkrablDeck.vue';
 import SkrablGrid from '../components/SkrablGrid.vue';
-import { submitTurn } from '../refs/gameState.js';
+import { submitTurn, isValidTurn } from '../refs/gameState.js';
 
 export default {
-  setup() {
-    return { submitTurn };
-  },
-  components: {
-    SkrablDeck,
-    SkrablGrid,
-  },
+    setup() {
+        return { submitTurn, isValidTurn };
+    },
+    components: {
+        SkrablDeck,
+        SkrablGrid,
+    },
 };
 </script>
 <style lang="scss" scoped>
 .table {
     margin: auto;
     width: 60%;
+}
+.red-button {
+    background-color: red;
+}
+.blue-button {
+    background-color: blue;
+}
+
+.btn {
+    padding: 1rem;
+    color: white;
+    font-weight: bold;
 }
 
 </style>

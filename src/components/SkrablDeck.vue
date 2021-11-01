@@ -3,9 +3,9 @@
       <SkrablTile
       class="tile-container"
         v-for="tile in tileDeck"
-        @tile-clicked="setClickedTile"
+        @tile-clicked="setSelectedTile"
         :tile="tile"
-        :clicked="clickedTile.key === tile.key"
+        :clicked="selectedTile.key === tile.key"
         :key="tile.key"/>
   </div>
 </template>
@@ -13,20 +13,20 @@
 <script>
 import { onMounted } from 'vue';
 import {
-  initializeDeck, tileDeck, clickedTile, setClickedTile,
+    initializeDeck, tileDeck, selectedTile, setSelectedTile,
 } from '../refs/gameState';
 import SkrablTile from './SkrablTile.vue';
 
 export default {
-  components: {
-    SkrablTile,
-  },
-  setup() {
-    onMounted(() => {
-      initializeDeck();
-    });
-    return { tileDeck, setClickedTile, clickedTile };
-  },
+    components: {
+        SkrablTile,
+    },
+    setup() {
+        onMounted(() => {
+            initializeDeck();
+        });
+        return { tileDeck, setSelectedTile, selectedTile };
+    },
 };
 </script>
 <style lang="scss" scoped>

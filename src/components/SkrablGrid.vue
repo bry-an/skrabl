@@ -9,16 +9,16 @@
 </template>
 
 <script>
-import { clickedTile, grid, assignTile } from '../refs/gameState.js';
+import { selectedTile, grid, assignTile } from '../refs/gameState.js';
 import SkrablTile from './SkrablTile.vue';
 
 export default {
-  setup() {
-    return { grid, assignTile, clickedTile };
-  },
-  components: {
-    SkrablTile,
-  },
+    setup() {
+        return { grid, assignTile, selectedTile };
+    },
+    components: {
+        SkrablTile,
+    },
 };
 
 </script>

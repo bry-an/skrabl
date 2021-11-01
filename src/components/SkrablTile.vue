@@ -7,27 +7,27 @@
 
 <script>
 export default {
-  name: 'SkrablTile',
-  data() {
-    return {
-      tiles: [],
-    };
-  },
-  props: {
-    tile: {
-      type: Object,
-      default: () => ({ letter: '', val: '' }),
+    name: 'SkrablTile',
+    data() {
+        return {
+            tiles: [],
+        };
     },
-    clicked: {
-      type: Boolean,
-      default: false,
+    props: {
+        tile: {
+            type: Object,
+            default: () => ({ letter: '', val: '' }),
+        },
+        clicked: {
+            type: Boolean,
+            default: false,
+        },
     },
-  },
-  methods: {
-    onClick() {
-      this.$emit('tile-clicked', this.tile);
+    methods: {
+        onClick() {
+            this.$emit('tile-clicked', this.tile);
+        },
     },
-  },
 };
 </script>
 
