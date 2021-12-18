@@ -2,6 +2,7 @@
   <div class="grid">
       <div v-for="(row, i) in grid" class="grid-row" :key="i">
           <div v-for="tile in row" class="grid-tile" :key="tile.key" @click="assignTile(tile.key)">
+          <div class="absolute">{{tile.key}}</div>
               <SkrablTile v-if="tile.placedTile" :tile="tile.placedTile"/>
           </div>
       </div>
@@ -23,6 +24,9 @@ export default {
 
 </script>
 <style lang="scss" scoped>
+.absolute {
+    position: absolute;
+}
 .grid-row {
     display: flex;
 }

@@ -3,63 +3,72 @@ import {
     letterValueMap,
     ROW,
     COL,
-} from './constants';
+} from './constants.js';
 import {
     equals,
     everyGrid,
     filterGrid,
+    getAdjs,
     getCols,
     getGridItem,
     getRows,
     totalPlacedTiles,
 } from './util.js';
+import { allPass, complement, or } from './functions.js';
 
+const isOccupied = (tile) => tile.occupied === true;
+const isConfirmed = (tile) => tile.confirmed === true;
+const isNotOccupied = complement(isOccupied);
+const isNotConfirmed = complement(isConfirmed);
+const isPrevExistingTile = allPass([isOccupied, isConfirmed]);
 export const generateLetters = () => initialSkrablLetters.map((letter, i) => ({ letter, val: letterValueMap[letter], key: i }));
-
-const getAdjs = (gridItem, grid) => ({
-    top: getGridItem(gridItem.top, grid),
-    right: getGridItem(gridItem.right, grid),
-    bottom: getGridItem(gridItem.bottom, grid),
-    left: getGridItem(gridItem.left, grid),
-});
 
 export const tileHasAdjConfirmedOccupiedTile = (grid) => (gridItem) => {
     const {
         top, left, bottom, right,
     } = getAdjs(gridItem, grid);
-    return (top.occupied && top.confirmed)
-        || (bottom.occupied && bottom.confirmed)
-        || (right.occupied && right.confirmed)
-        || (left.occupied && left.confirmed);
+    return or(
+        (isOccupied(top) && isConfirmed(top)),
+        (isOccupied(bottom) && isConfirmed(bottom)),
+        (isOccupied(right) && isConfirmed(right)),
+        (isOccupied(left) && isConfirmed(left)),
+    );
 };
 
 export const tileHasAdjUnconfirmedOccupiedTile = (grid) => (gridItem) => {
     const {
         top, left, bottom, right,
     } = getAdjs(gridItem, grid);
-    return (top.occupied && top.confirmed === false)
-    || (bottom.occupied && bottom.confirmed === false)
-    || (right.occupied && right.confirmed === false)
-    || (left.occupied && left.confirmed === false);
+    return or(
+        (isOccupied(top) && isNotConfirmed(top)),
+        (isOccupied(bottom) && isNotConfirmed(bottom)),
+        (isOccupied(right) && isNotConfirmed(right)),
+        (isOccupied(left) && isNotConfirmed(left)),
+    );
 };
 
-const getAttemptedTurn = (grid) => filterGrid((gridItem) => gridItem.confirmed === false && gridItem.occupied === true, grid);
+export const tileHasAdjOccupiedTile = (grid) => (gridItem) => {
+    const {
+        top, left, bottom, right,
+    } = getAdjs(gridItem, grid);
+    return or(
+        isOccupied(top),
+        isOccupied(bottom),
+        isOccupied(right),
+        isOccupied(left),
+    );
+};
 
-const isInitialTurn = (grid) => everyGrid((gridItem) => (gridItem.occupied ? gridItem.confirmed === false : true), grid);
+const getAttemptedTurn = (grid) => filterGrid((gridItem) => isNotConfirmed(gridItem) && isOccupied(gridItem), grid);
 
-export const getWordFromLine = (line) => {
-    const word = [];
-    for (let i = 0; i < line.length; i += 1) {
-        if (line[i].occupied === true && line[i].confirmed === false) {
-            let idx = i;
-            while (line[idx].occupied === true && idx < line.length) {
-                word.push(line[idx].placedTile);
-                idx += 1;
-            }
-            return word;
-        }
+const isInitialTurn = (grid) => everyGrid((gridItem) => (isOccupied(gridItem) ? isNotConfirmed(gridItem) : true), grid);
+
+export const getWord = (tile, direction, word = []) => {
+    const nextTile = getAdjs(tile)[direction] || null;
+    if (nextTile === null) {
+        return word;
     }
-    return '';
+    return getWord(nextTile, direction, word.concat(tile.letter));
 };
 
 const lettersInOneRowOrCol = (letters) => {
@@ -71,24 +80,63 @@ const lettersInOneRowOrCol = (letters) => {
     return false;
 };
 
-export const getWord = () => {
-    // TODO
+export const getPlay = (grid) => {
+    const attemptedTurn = getAttemptedTurn(grid);
+    const words = [];
+    attemptedTurn.forEach((tile) => {
+        const neighbors = Object.entries(getAdjs(tile));
+        for (const [dir, neighbor] of neighbors) {
+            if (isPrevExistingTile(neighbor)) {
+                // TODO
+                // console.log('get play', getWord(neighbor, dir));
 
+            }
+        }
+    });
 };
 export const validateTurn = (grid) => {
+    console.log('validating turn');
+    const numPlacedTiles = totalPlacedTiles(grid);
     const attemptedTurn = getAttemptedTurn(grid);
-    if (!lettersInOneRowOrCol(attemptedTurn)) return false;
+    console.log('attempted turn', attemptedTurn);
+    if (numPlacedTiles === 0) {
+        return false;
+    }
+    if (!lettersInOneRowOrCol(attemptedTurn)) {
+        return false;
+    }
     if (isInitialTurn(grid)) {
-        return totalPlacedTiles(grid) === 1
+        return numPlacedTiles === 1
             ? true
-            : attemptedTurn.every(tileHasAdjUnconfirmedOccupiedTile);
+            : attemptedTurn.every(tileHasAdjUnconfirmedOccupiedTile(grid));
     }
 
-    // connected to main grid
+    // not connected to main grid
     if (!attemptedTurn.some(tileHasAdjConfirmedOccupiedTile(grid))) return false;
-    // contiguous
-    if (!attemptedTurn.every(tileHasAdjUnconfirmedOccupiedTile(grid)) && attemptedTurn.length > 1) return false;
+    // contiguous - every tile has an adjacent occupied tile
+    if (!attemptedTurn.every(tileHasAdjOccupiedTile(grid)) && attemptedTurn.length > 1) return false;
     if (attemptedTurn.length === 0) return false;
 
     return true;
+};
+
+const assignTile = ({ selectedTile, gridKey, grid }) => {
+    const clickedGridSpace = getGridItem(gridKey, grid);
+    if (clickedGridSpace.placedTile && isConfirmed(clickedGridSpace)) {
+    // a confirmed tile is already here
+        return;
+    }
+    if (clickedGridSpace.placedTile && isNotConfirmed(clickedGridSpace)) {
+    // undo placement
+        addTileToDeck(clickedGridSpace.placedTile);
+        removeTileFromGrid(gridKey);
+        return;
+    }
+    if (isEmpty(selectedTile)) {
+        return;
+    }
+    clickedGridSpace.placedTile = selectedTile;
+    clickedGridSpace.confirmed = false;
+    clickedGridSpace.occupied = true;
+    removeTileFromDeck(selectedTile);
 };

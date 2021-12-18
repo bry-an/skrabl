@@ -1,6 +1,4 @@
-export const T = () => true;
-export const identity = (x) => x;
-export const shuffle = (objs) => objs.map((o) => ({ ...o, rdm: Math.random() })).sort((a, b) => a.rdm - b.rdm);
+import { identity, T } from './functions.js';
 
 export const buildGrid = (n, m) => new Array(n).fill(
     new Array(m).fill({}),
@@ -12,6 +10,7 @@ export const generateGrid = () => {
         grid[i] = grid[i].map((__, j) => ({
             placedTile: null,
             occupied: false,
+            bonusFn: '',
             key: `${i},${j}`,
             top: `${i - 1},${j}`,
             right: `${i},${j + 1}`,
@@ -26,7 +25,7 @@ export const getGridItem = (gridKey, grid) => {
     const [row, col] = gridKey.split(',');
     return grid[row]
         ? grid[row][col] || {}
-        : {};
+        : null;
 };
 
 const getRow = (tile) => tile.key.split(',')[0];
@@ -45,6 +44,9 @@ export const someGrid = (pred, grid) => grid.some((row) => row.some(pred));
 
 export const everyGrid = (pred, grid) => grid.every((row) => row.every(pred));
 
+/**
+ * @returns Array 1-dimensional collection of filtered results
+ */
 export const filterGrid = (pred, grid) => grid.reduce((items, row) => items.concat(row.filter(pred)), []);
 
 export const getGridCol = (col, grid) => filterGrid((item) => getCol(item) === col, grid);
@@ -74,3 +76,22 @@ const placedTilesAdder = (sum, row) => sum + row.reduce((rowSum, tile) => (tile.
     : rowSum), 0);
 
 export const totalPlacedTiles = (grid) => reduceGrid(placedTilesAdder, 0, grid);
+
+export const getAdjs = (gridItem, grid) => ({
+    top: getGridItem(gridItem.top, grid),
+    right: getGridItem(gridItem.right, grid),
+    bottom: getGridItem(gridItem.bottom, grid),
+    left: getGridItem(gridItem.left, grid),
+});
+
+// maybe delete these missing helpers
+export const gridKeyToArrPairNums = (key) => key.split(',').map((char) => parseInt(char.trim(), 10));
+
+export const getMissingKeys = (keysArr) => {
+    // ["1,0", "1,1", "1,4"]
+    const keyPairs = keysArr.map(gridKeyToArrPairNums);
+
+    const changingIndex = keyPairs[0][0] === keyPairs[1][0] ? 1 : 0;
+    const vals = keyPairs.map((pair) => pair[changingIndex]);
+    return vals;
+};

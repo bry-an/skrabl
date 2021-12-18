@@ -1,15 +1,15 @@
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import {
     confirmMapper,
     generateGrid,
     getGridItem,
     isEmpty,
     mapGrid,
-    shuffle,
-} from '../util';
+} from '../util.js';
 import {
     generateLetters, validateTurn,
-} from '../game';
+} from '../game.js';
+import { shuffle } from '../functions.js';
 
 export const skrablSack = ref(generateLetters());
 
@@ -19,7 +19,7 @@ export const tileDeck = ref([]);
 
 export const grid = ref(generateGrid());
 
-export const isValidTurn = ref(false);
+export const isValidTurn = computed(() => validateTurn(grid.value));
 
 const removeTileFromDeck = (tile) => {
     tileDeck.value = tileDeck.value.filter((tileDeckTile) => tileDeckTile.key !== tile.key);
@@ -34,7 +34,7 @@ const removeTileFromGrid = (gridKey) => {
 };
 
 export const addTileToDeck = (tile) => {
-    tileDeck.value = tileDeck.value.concat(tile);
+    tileDeck.value = tileDeck.value.concat({ ...tile });
 };
 
 export const assignTile = (gridKey) => {
@@ -49,11 +49,12 @@ export const assignTile = (gridKey) => {
         removeTileFromGrid(gridKey);
         return;
     }
-    if (isEmpty(selectedTile.value)) return;
+    if (isEmpty(selectedTile.value)) {
+        return;
+    }
     clickedGridSpace.placedTile = selectedTile.value;
     clickedGridSpace.confirmed = false;
     clickedGridSpace.occupied = true;
-    isValidTurn.value = validateTurn(grid.value);
     removeTileFromDeck(selectedTile.value);
 };
 
@@ -86,8 +87,9 @@ export const initializeDeck = () => {
 
 export const submitTurn = () => {
     console.log('validate turn', validateTurn(grid.value));
+    // get words here
     tileDeck.value = draw(tileDeck.value);
+    // game state mutation
     grid.value = mapGrid(confirmMapper, grid.value);
     selectedTile.value = {};
-    isValidTurn.value = false;
 };
