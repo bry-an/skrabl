@@ -1,4 +1,6 @@
-import { identity, T } from './functions.js';
+import {
+    identity, T, nil, or,
+} from './functions.js';
 
 export const buildGrid = (n, m) => new Array(n).fill(
     new Array(m).fill({}),
@@ -94,4 +96,11 @@ export const getMissingKeys = (keysArr) => {
     const changingIndex = keyPairs[0][0] === keyPairs[1][0] ? 1 : 0;
     const vals = keyPairs.map((pair) => pair[changingIndex]);
     return vals;
+};
+
+export const traverseExisting = (curr, dir, grid, coll = []) => {
+    if (or(nil(curr[dir]), nil(curr[dir].placedTile))) {
+        return coll;
+    }
+    return traverseExisting(curr[dir], dir, grid, coll.concat(curr));
 };
