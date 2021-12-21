@@ -24,3 +24,8 @@ export const groupBy = (fn) => (arr) => arr.reduce((grouped, item) => {
     }
     grouped[grouping] = currGroupingVal.concat(item);
 }, {});
+export const prop = (key) => (obj) => (obj ? obj[key] : obj);
+export const propOr = (fallback, key, obj) => (prop(key)(obj) !== undefined
+    && prop(key)(obj) !== null
+    ? prop(key)(obj)
+    : fallback);

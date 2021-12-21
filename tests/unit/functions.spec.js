@@ -1,5 +1,5 @@
 import {
-    allPass, groupBy, nil, notNil, or, notNilAndNotFalse,
+    and, allPass, groupBy, nil, notNil, or, notNilAndNotFalse,
 } from '../../src/functions.js';
 
 describe('allPass', () => {
@@ -56,5 +56,12 @@ describe('or', () => {
         expect(or(false, {})).toBe(true);
         expect(or(null, undefined, false)).toBe(false);
         expect(or(null, undefined, false, 0)).toBe(true); // 0 truthy, on the fence about diverging from how JS handles 0
+    });
+});
+
+describe('and', () => {
+    it('functions as expected', () => {
+        expect(and(false, false, true)).toBe(false);
+        expect(and(true, true)).toBe(true);
     });
 });

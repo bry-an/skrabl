@@ -1,5 +1,5 @@
 import {
-    cond, isEmpty, totalPlacedTiles, reduceGrid,
+    cond, isEmpty, totalPlacedTiles, reduceGrid, traverseExisting,
 } from '../../src/util';
 
 describe('cond', () => {
@@ -43,6 +43,13 @@ describe('reduceGrid', () => {
 });
 
 describe('totalPlacedTiles', () => {
+    it('works as expected', () => {
+        const grid = [[{ placedTile: 'tile' }, { placedTile: 'another tile' }]];
+        expect(totalPlacedTiles(grid)).toBe(2);
+    });
+});
+
+describe('traverseExisting', () => {
     it('works as expected', () => {
         const grid = [[{ placedTile: 'tile' }, { placedTile: 'another tile' }]];
         expect(totalPlacedTiles(grid)).toBe(2);

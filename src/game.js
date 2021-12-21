@@ -1,8 +1,8 @@
 import {
+    COL,
+    ROW,
     initialSkrablLetters,
     letterValueMap,
-    ROW,
-    COL,
 } from './constants.js';
 import {
     equals,
@@ -14,7 +14,14 @@ import {
     getRows,
     totalPlacedTiles,
 } from './util.js';
-import { allPass, complement, or } from './functions.js';
+import {
+    allPass,
+    complement,
+    cond,
+    nil,
+    notNil,
+    or,
+} from './functions.js';
 
 const isOccupied = (tile) => tile.occupied === true;
 const isConfirmed = (tile) => tile.confirmed === true;
@@ -63,8 +70,8 @@ const getAttemptedTurn = (grid) => filterGrid((gridItem) => isNotConfirmed(gridI
 
 const isInitialTurn = (grid) => everyGrid((gridItem) => (isOccupied(gridItem) ? isNotConfirmed(gridItem) : true), grid);
 
-export const getWord = (tile, direction, word = []) => {
-    const nextTile = getAdjs(tile)[direction] || null;
+export const getWord = (tile, direction, grid, word = []) => {
+    const nextTile = getAdjs(tile, grid)[direction] || null;
     if (nextTile === null) {
         return word;
     }
@@ -80,25 +87,28 @@ const lettersInOneRowOrCol = (letters) => {
     return false;
 };
 
-export const getPlay = (grid) => {
+export const getPlayedWords = (grid) => {
+    const numPlacedTiles = totalPlacedTiles(grid);
     const attemptedTurn = getAttemptedTurn(grid);
     const words = [];
+    if (numPlacedTiles > 1) {
+        const baseWord = attemptedTurn.map(({ placedTile = {} }) => placedTile.letter || '');
+        words.push(baseWord);
+    }
     attemptedTurn.forEach((tile) => {
-        const neighbors = Object.entries(getAdjs(tile));
+        const neighbors = Object.entries(getAdjs(tile, grid));
+        console.log('neighbors', neighbors);
         for (const [dir, neighbor] of neighbors) {
             if (isPrevExistingTile(neighbor)) {
-                // TODO
-                // console.log('get play', getWord(neighbor, dir));
-
+                words.push(getWord(neighbor, dir));
             }
         }
     });
+    return words;
 };
 export const validateTurn = (grid) => {
-    console.log('validating turn');
     const numPlacedTiles = totalPlacedTiles(grid);
     const attemptedTurn = getAttemptedTurn(grid);
-    console.log('attempted turn', attemptedTurn);
     if (numPlacedTiles === 0) {
         return false;
     }
@@ -120,23 +130,49 @@ export const validateTurn = (grid) => {
     return true;
 };
 
-const assignTile = ({ selectedTile, gridKey, grid }) => {
-    const clickedGridSpace = getGridItem(gridKey, grid);
-    if (clickedGridSpace.placedTile && isConfirmed(clickedGridSpace)) {
-    // a confirmed tile is already here
+export const traverse = ({
+    curr, dir, grid,
+}) => {
+    if (or(nil(curr)), isNotOccupied(curr)) {
+        console.log('this should not happen');
         return;
     }
-    if (clickedGridSpace.placedTile && isNotConfirmed(clickedGridSpace)) {
-    // undo placement
-        addTileToDeck(clickedGridSpace.placedTile);
-        removeTileFromGrid(gridKey);
-        return;
+
+    let coll = [];
+    const {
+        top, bottom, left, right,
+    } = getAdjs(curr, grid); // GET ADJS NEEDS REFERENCE TO THE GRID
+
+    if (isConfirmed(curr)) {
+        // existing tile, iteration in specific direction
+        // only continue if next is confirmed (and thus occupied)
+        const next = getAdjs(curr)[dir];
+        let coll = [];
+
+        if (isConfirmed(next)) {
+            coll = coll.concat(curr, traverse({ curr: next, dir }));
+        } else {
+            return curr;
+        }
+        return coll;
     }
-    if (isEmpty(selectedTile)) {
-        return;
+    // iterating through new tiles, can traverse in any direction (except to a visited tile)
+    curr.visited = true;
+    if (notNil(top) && notNil(top.placedTile) && !top.visited) {
+        coll = coll.concat(curr, traverse({ curr: top, dir: 'top', grid }));
     }
-    clickedGridSpace.placedTile = selectedTile;
-    clickedGridSpace.confirmed = false;
-    clickedGridSpace.occupied = true;
-    removeTileFromDeck(selectedTile);
+    if (notNil(right) && notNil(right.placedTile) && !right.visited) {
+        coll = coll.concat(curr, traverse({ curr: right, dir: 'right', grid }));
+    }
+    if (notNil(bottom) && notNil(bottom.placedTile) && !bottom.visited) {
+        coll = coll.concat(curr, traverse({ curr: bottom, dir: 'bottom', grid }));
+    }
+    if (notNil(left) && notNil(left.placedTile) && !left.visited) {
+        coll = coll.concat(curr, traverse({ curr: left, dir: 'left', grid }));
+    }
+
+    if (coll.length === 0) {
+        return curr;
+    }
+    return coll;
 };

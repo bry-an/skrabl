@@ -88,6 +88,7 @@ export const initializeDeck = () => {
 export const submitTurn = () => {
     console.log('validate turn', validateTurn(grid.value));
     // get words here
+
     tileDeck.value = draw(tileDeck.value);
     // game state mutation
     grid.value = mapGrid(confirmMapper, grid.value);

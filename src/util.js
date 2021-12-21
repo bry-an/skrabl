@@ -1,6 +1,8 @@
 import {
-    identity, T, nil, or,
+    identity, T, nil, or, notNil,
 } from './functions.js';
+
+import { COL, ROW } from './constants.js';
 
 export const buildGrid = (n, m) => new Array(n).fill(
     new Array(m).fill({}),
@@ -23,7 +25,7 @@ export const generateGrid = () => {
     return grid;
 };
 
-export const getGridItem = (gridKey, grid) => {
+export const getGridItem = (gridKey, grid = {}) => {
     const [row, col] = gridKey.split(',');
     return grid[row]
         ? grid[row][col] || {}
@@ -96,6 +98,27 @@ export const getMissingKeys = (keysArr) => {
     const changingIndex = keyPairs[0][0] === keyPairs[1][0] ? 1 : 0;
     const vals = keyPairs.map((pair) => pair[changingIndex]);
     return vals;
+};
+
+export const getPlayedWords = (startingGridItem, grid) => {
+    const {
+        top, bottom, left, right,
+    } = getAdjs(startingGridItem);
+    const words = [];
+    words.push(traverseNewlyPlayed(top, 'top', grid));
+    words.push(traverseNewlyPlayed(left, 'left', grid));
+    words.push(traverseNewlyPlayed(bottom, 'bottom', grid));
+    words.push(traverseNewlyPlayed(right, 'right', grid));
+
+    return words;
+};
+
+export const traverseNewlyPlayed = (curr, dir, grid, coll = []) => {
+    if (nil(curr)) {
+        return coll;
+    }
+    const next = getAdjs(curr)[dir];
+    return traverseNewlyPlayed(next, dir, grid, coll.concat(curr));
 };
 
 export const traverseExisting = (curr, dir, grid, coll = []) => {
